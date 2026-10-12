@@ -1,97 +1,73 @@
-# Application Python - "Bonjour mr. Villard"
+# Application Python - "Bonjour mr. Villard" & Pipeline CI/CD Proxmox
 
-Application web légère développée avec **Flask** et prête à être déployée sur une instance **Ubuntu** (Machine Virtuelle ou Conteneur LXC) hébergée sur **Proxmox VE**.
+Application web Python/Flask prête pour la production avec simulation complète de **Pipeline CI/CD** vers une instance **Ubuntu** hébergée sur **Proxmox VE**.
 
 ---
 
 ## 📁 Structure du projet
 
 ```text
-├── app.py                  # Application Flask principale
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml           # Workflow officiel GitHub Actions (CI & CD)
+├── app.py                      # Application Flask principale
+├── test_app.py                 # Tests unitaires automatisés (Pytest)
+├── simulate_pipeline.py        # Simulateur interactif de pipeline CI/CD
 ├── templates/
-│   └── index.html          # Page d'accueil moderne avec le message
-├── requirements.txt        # Dépendances Python (Flask, Gunicorn)
-├── Dockerfile              # Image Docker optimisée
-├── docker-compose.yml      # Lancement rapide multi-conteneurs / Docker
-├── villard-app.service     # Service systemd pour démarrage automatique natif
-└── README.md               # Guide complet de déploiement
+│   └── index.html              # Interface utilisateur ("Bonjour mr. Villard")
+├── requirements.txt            # Dépendances Python (Flask, Gunicorn, Pytest)
+├── Dockerfile                  # Image Docker optimisée
+├── docker-compose.yml          # Déploiement conteneurisé
+├── villard-app.service         # Service systemd pour Ubuntu natif
+└── README.md                   # Documentation complète
 ```
 
 ---
 
-## 🧪 1. Tester en local (optionnel)
+## ⚡ 1. Lancer la Simulation du Pipeline CI/CD
 
-Sous Windows / PowerShell :
-```powershell
-python -m venv venv
-.\venv\Scripts\activate
-pip install -r requirements.txt
-python app.py
-```
-Accédez à l'URL : `http://localhost:5000`
+Un script de simulation est inclus pour tester toutes les étapes (CI & CD) directement :
 
----
-
-## 🚀 2. Déploiement sur votre instance Ubuntu (Proxmox)
-
-Copiez le dossier de votre projet vers votre VM/CT Ubuntu via `scp` ou `rsync` :
 ```bash
-scp -r "c:\Users\LENOVO\OneDrive\Desktop\New folder" user@<IP_UBUNTU>:/opt/villard-app
+python simulate_pipeline.py
 ```
 
----
-
-### Option A : Déploiement avec Docker (Recommandé)
-
-1. **Installer Docker & Compose sur Ubuntu (si pas encore installé) :**
-   ```bash
-   sudo apt update
-   sudo apt install -y docker.io docker-compose-v2
-   sudo usermod -aG docker $USER
-   ```
-
-2. **Démarrer l'application :**
-   ```bash
-   cd /opt/villard-app
-   docker compose up -d --build
-   ```
-
-3. **Vérification :**
-   ```bash
-   docker ps
-   ```
+### Ce que fait la simulation :
+1. **Étape 1 (CI - Linting)** : Analyse syntaxique de `app.py` et des tests.
+2. **Étape 2 (CI - Tests)** : Exécute les tests unitaires réels (code 200, présence du message "Bonjour mr. Villard", gestion des 404).
+3. **Étape 3 (CI - Docker)** : Valide le Dockerfile et la configuration de build.
+4. **Étape 4 (CD - SSH/Sync)** : Simule la connexion SSH et la synchronisation vers l'instance Ubuntu sur Proxmox.
+5. **Étape 5 (CD - Déploiement)** : Simule le lancement du conteneur en arrière-plan.
+6. **Étape 6 (CD - Smoke test)** : Vérifie la disponibilité et le bon affichage de l'application.
 
 ---
 
-### Option B : Déploiement Natif (Systemd + Gunicorn)
+## 🔄 2. Pipeline Réel (GitHub Actions)
 
-1. **Installer Python et les outils sur Ubuntu :**
-   ```bash
-   sudo apt update
-   sudo apt install -y python3 python3-pip python3-venv
-   ```
+Le fichier [.github/workflows/ci-cd.yml](file:///.github/workflows/ci-cd.yml) automatise l'ensemble du cycle lors de chaque push :
 
-2. **Créer l'environnement virtuel et installer les dépendances :**
-   ```bash
-   cd /opt/villard-app
-   python3 -m venv venv
-   ./venv/bin/pip install -r requirements.txt
-   ```
+- **Job CI (Tests & Build)** :
+  - Installation automatique des dépendances.
+  - Exécution des tests via `pytest test_app.py`.
+  - Construction de l'image Docker.
 
-3. **Activer le service Systemd :**
-   ```bash
-   sudo cp villard-app.service /etc/systemd/system/
-   sudo systemctl daemon-reload
-   sudo systemctl enable --now villard-app
-   sudo systemctl status villard-app
-   ```
+- **Job CD (Déploiement sur Proxmox)** :
+  - Connexion SSH sécurisée vers la VM/LXC Ubuntu.
+  - Synchronisation des fichiers avec `rsync`.
+  - Redémarrage sans coupure du conteneur avec `docker compose up -d --build`.
+  - Smoke test automatisé via `curl`.
+
+### Secrets GitHub à configurer (pour déploiement réel) :
+Dans les paramètres de votre dépôt GitHub (*Settings > Secrets and variables > Actions*) :
+- `PROXMOX_HOST` : Adresse IP de l'instance Ubuntu.
+- `PROXMOX_USER` : Nom d'utilisateur SSH (ex: `ubuntu`).
+- `PROXMOX_SSH_KEY` : Clé privée SSH pour la connexion sans mot de passe.
 
 ---
 
-## 🌐 3. Accès à l'application
+## 🌐 3. Accès à l'application déployée
 
-Ouvrez votre navigateur et entrez l'adresse IP de votre instance Ubuntu sur Proxmox :
+Une fois déployée, l'application est accessible sur :
 ```text
-http://<IP_DE_VOTRE_INSTANCE_UBUNTU>:5000
+http://<IP_UBUNTU_PROXMOX>:5000/
 ```
-Le message élégant **"Bonjour mr. Villard"** s'affichera directement.
