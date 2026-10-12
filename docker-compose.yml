@@ -1,0 +1,7 @@
+services:
+  villard-app:
+    build: .
+    container_name: villard_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
