@@ -49,7 +49,8 @@ jobs:
     name: 🚀 Déploiement vers Ubuntu (Proxmox VE)
     needs: ci-tests-and-build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # S'exécute uniquement si le secret PROXMOX_HOST a été configuré dans GitHub Secrets
+    if: github.ref == 'refs/heads/main' && secrets.PROXMOX_HOST != ''
 
     steps:
       - name: 📥 Cloner le dépôt
