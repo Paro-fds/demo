@@ -43,45 +43,47 @@ jobs:
           docker build -t villard-app:latest .
 
   # ========================================================
-  # Étape 2 : DÉPLOIEMENT CONTINU (CD)
+  # Étape 2 : DÉPLOIEMENT CONTINU (CD) - DÉSACTIVÉ
+  # Pour réactiver le déploiement automatique sur Proxmox :
+  # 1. Configurez les secrets (PROXMOX_HOST, PROXMOX_USER, PROXMOX_SSH_KEY)
+  # 2. Décommentez le bloc ci-dessous
   # ========================================================
-  cd-deploy-proxmox:
-    name: 🚀 Déploiement vers Ubuntu (Proxmox VE)
-    needs: ci-tests-and-build
-    runs-on: ubuntu-latest
-    # S'exécute uniquement si le secret PROXMOX_HOST a été configuré dans GitHub Secrets
-    if: github.ref == 'refs/heads/main' && secrets.PROXMOX_HOST != ''
-
-    steps:
-      - name: 📥 Cloner le dépôt
-        uses: actions/checkout@v4
-
-      - name: 🔑 Configuration de la clé SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PROXMOX_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.PROXMOX_HOST }} >> ~/.ssh/known_hosts
-
-      - name: 📦 Synchronisation des fichiers sur Ubuntu
-        run: |
-          rsync -avz --exclude='.git' --exclude='__pycache__' ./ ${{ secrets.PROXMOX_USER }}@${{ secrets.PROXMOX_HOST }}:/opt/villard-app/
-
-      - name: 🚀 Lancement du conteneur sur l'instance Ubuntu
-        run: |
-          ssh ${{ secrets.PROXMOX_USER }}@${{ secrets.PROXMOX_HOST }} << 'EOF'
-            cd /opt/villard-app
-            docker compose down || true
-            docker compose up -d --build
-          EOF
-
-      - name: 🩺 Test de bon fonctionnement (Smoke Test / Healthcheck)
-        run: |
-          sleep 5
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.PROXMOX_HOST }}:5000/)
-          if [ "$STATUS" -eq 200 ]; then
-            echo "✅ Déploiement réussi avec succès ! L'application répond HTTP 200."
-          else
-            echo "❌ Erreur de déploiement (Code HTTP: $STATUS)"
-            exit 1
-          fi
+  # cd-deploy-proxmox:
+  #   name: 🚀 Déploiement vers Ubuntu (Proxmox VE)
+  #   needs: ci-tests-and-build
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
+  #
+  #   steps:
+  #     - name: 📥 Cloner le dépôt
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 🔑 Configuration de la clé SSH
+  #       run: |
+  #         mkdir -p ~/.ssh
+  #         echo "${{ secrets.PROXMOX_SSH_KEY }}" > ~/.ssh/id_rsa
+  #         chmod 600 ~/.ssh/id_rsa
+  #         ssh-keyscan -H ${{ secrets.PROXMOX_HOST }} >> ~/.ssh/known_hosts
+  #
+  #     - name: 📦 Synchronisation des fichiers sur Ubuntu
+  #       run: |
+  #         rsync -avz --exclude='.git' --exclude='__pycache__' ./ ${{ secrets.PROXMOX_USER }}@${{ secrets.PROXMOX_HOST }}:/opt/villard-app/
+  #
+  #     - name: 🚀 Lancement du conteneur sur l'instance Ubuntu
+  #       run: |
+  #         ssh ${{ secrets.PROXMOX_USER }}@${{ secrets.PROXMOX_HOST }} << 'EOF'
+  #           cd /opt/villard-app
+  #           docker compose down || true
+  #           docker compose up -d --build
+  #         EOF
+  #
+  #     - name: 🩺 Test de bon fonctionnement (Smoke Test / Healthcheck)
+  #       run: |
+  #         sleep 5
+  #         STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.PROXMOX_HOST }}:5000/)
+  #         if [ "$STATUS" -eq 200 ]; then
+  #           echo "✅ Déploiement réussi avec succès ! L'application répond HTTP 200."
+  #         else
+  #           echo "❌ Erreur de déploiement (Code HTTP: $STATUS)"
+  #           exit 1
+  #         fi
