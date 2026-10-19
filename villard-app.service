@@ -3,9 +3,9 @@ Description=Application Python Villard Flask
 After=network.target
 
 [Service]
-User=ubuntu
-WorkingDirectory=/opt/villard-app
-ExecStart=/opt/villard-app/venv/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 app:app
+User=devops
+WorkingDirectory=/home/devops/demo
+ExecStart=/home/devops/demo/venv/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 app:app
 Restart=always
 
 [Install]
